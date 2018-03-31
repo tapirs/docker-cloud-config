@@ -32,3 +32,4 @@ runcmd:
   - [ sh, -c, "yum install -y yum-utils device-mapper-persistent-data lvm2 docker docker-compose"]
   - [ sh, -c, "sudo usermod -a -G docker civo"]
   - [ sh, -c, "service docker start" ]
+  - [ sh, -c, "docker run hello-world" ]

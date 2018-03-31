@@ -17,6 +17,26 @@ curl -v -X PUT -H "Authorization: bearer $auth_key" -F cloud_config=@./docker-cl
 #launch an instance
 instance_id=`curl -H "Authorization: bearer $auth_key" https://api.civo.com/v2/instances -d "hostname=$hostname&template=$template_name&size=g1.xsmall&ssh_key_id=49fca459-71c3-48e3-aa28-d48d27073450"|jq -r '.id'`
 
+while [[ $instance_id == null ]]
+do
+  instance_id=`curl -H "Authorization: bearer $auth_key" https://api.civo.com/v2/instances | jq -r ".items[]|select(.hostname==\"$hostname\")|.id"`
+done
+
+#get firewall id as attaching firewall doesnt work with a name
+firewall_id=`curl -X GET -H "Authorization: bearer $auth_key" https://api.civo.com/v2/firewalls | jq -r ".[]|select(.name==\""$template_name"_firewall\")|.id"`
+
+#attach firewalls
+echo "curl -H \"Authorization: bearer $auth_key\" -X PUT https://api.civo.com/v2/instances/$instance_id/firewall -d \"firewall_id=$firewall_id\""
+result=`curl -H "Authorization: bearer $auth_key" -X PUT https://api.civo.com/v2/instances/$instance_id/firewall -d "firewall_id=$firewall_id" | jq -r '.result'`
+
+echo $result
+
+while [[ $result == "failed" ]]
+do
+  result=`curl -H "Authorization: bearer $auth_key" -X PUT https://api.civo.com/v2/instances/$instance_id/firewall -d "firewall_id=$firewall_id" | jq -r '.result'`
+  echo $result
+done
+
 echo $hostname
 echo $instance_id
 
