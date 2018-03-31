@@ -1,0 +1,34 @@
+#cloud-config
+
+hostname: $HOSTNAME
+fqdn: $HOSTNAME
+timezone: $TIMEZONE
+manage_etc_hosts: true
+
+users:
+  - name: $INITIAL_USER
+    ssh-authorized-keys:
+      - $SSH_KEY
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    shell: /bin/bash
+
+chpasswd:
+  list: |
+    $INITIAL_USER:$INITIAL_PASSWORD
+  expire: False
+
+write_files:
+  - content: |
+      STORAGE_DRIVER=devicemapper
+    path: /etc/sysconfig/docker-storage-setup
+  - content: |
+      {
+        "storage-driver": "devicemapper"
+      }
+    path: /etc/docker/daemon.json
+
+runcmd:
+  #- [ sh, -c, "yum update -y" ]
+  - [ sh, -c, "yum install -y yum-utils device-mapper-persistent-data lvm2 docker docker-compose"]
+  - [ sh, -c, "sudo usermod -a -G docker civo"]
+  - [ sh, -c, "service docker start" ]
