@@ -29,7 +29,13 @@ write_files:
 
 runcmd:
   #- [ sh, -c, "yum update -y" ]
-  - [ sh, -c, "yum install -y yum-utils device-mapper-persistent-data lvm2 docker docker-compose"]
-  - [ sh, -c, "sudo usermod -a -G docker civo"]
-  - [ sh, -c, "service docker start" ]
-  - [ sh, -c, "docker run hello-world" ]
+  - [ sh, -c, "yum install -y git wget epel-release python-pip " [ #yum-utils device-mapper-persistent-data lvm2 docker docker-compose"]
+  - [ sh, -c "wget -qO- https://get.docker.com/ | sh" ]
+  - [ sh, -c, "usermod -a -G docker $INITIAL_USER"]
+  - [ sh, -c, "systemctl start docker.service" ]
+  #- [ sh, -c, "docker run hello-world" ]
+  - [ sh, -c, "pip install docker-compose" ]
+  - [ sh, -c, "yum upgrade python*" ]
+  - [sh, -c, "git clone git://github.com/tapirs/docker-cloud-config.git" ]
+  - [sh, -c, "cd docker-cloud-config" ]
+  - [sh, -c, "docker-compose -f jenkins-docker-compose.yml up -d " ]

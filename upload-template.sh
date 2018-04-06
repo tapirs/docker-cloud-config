@@ -7,15 +7,16 @@ fi
 auth_key=$1
 template_name="docker"
 hostname=$template_name-`date +%d%m%Y-%H%M`
+tags="jenkins test"
 
 #create a template
-#curl -H "Authorization: bearer $auth_key" https://api.civo.com/v2/templates -F id=$template_name -F name="$template_name" -F image_id=centos-7
+#curl -H "Authorization: bearer $auth_key" https://api.civo.com/v2/templates -F id=$template_name -F name="$template_name" -F image_id=623a4843-c58d-4ba9-b4ba-2124e41a47a7
 
 #upload new template
-curl -v -X PUT -H "Authorization: bearer $auth_key" -F cloud_config=@./docker-cloud-config https://api.civo.com/v2/templates/$template_name
+curl -v -X PUT -H "Authorization: bearer $auth_key" -F cloud_config=@./$template_name-cloud-config https://api.civo.com/v2/templates/$template_name
 
 #launch an instance
-instance_id=`curl -H "Authorization: bearer $auth_key" https://api.civo.com/v2/instances -d "hostname=$hostname&template=$template_name&size=g1.xsmall&ssh_key_id=49fca459-71c3-48e3-aa28-d48d27073450"|jq -r '.id'`
+instance_id=`curl -H "Authorization: bearer $auth_key" https://api.civo.com/v2/instances -d "hostname=$hostname&template=$template_name&size=g1.xsmall&ssh_key_id=49fca459-71c3-48e3-aa28-d48d27073450&tags=$tags"|jq -r '.id'`
 
 while [[ $instance_id == null ]]
 do
@@ -23,7 +24,7 @@ do
 done
 
 #get firewall id as attaching firewall doesnt work with a name
-firewall_id=`curl -X GET -H "Authorization: bearer $auth_key" https://api.civo.com/v2/firewalls | jq -r ".[]|select(.name==\""$template_name"_firewall\")|.id"`
+firewall_id=`curl -X GET -H "Authorization: bearer $auth_key" https://api.civo.com/v2/firewalls | jq -r ".[]|select(.name==\"docker_firewall\")|.id"`
 
 #attach firewalls
 echo "curl -H \"Authorization: bearer $auth_key\" -X PUT https://api.civo.com/v2/instances/$instance_id/firewall -d \"firewall_id=$firewall_id\""
